@@ -1,0 +1,36 @@
+GET http://localhost:3000/product
+###
+GET http://localhost:3000/product/101
+###
+GET http://localhost:3000/warehouse
+###
+GET http://localhost:3000/supplier
+###
+GET http://localhost:3000/supplier/99
+###
+
+
+POST http://localhost:3000/product HTTP/1.1
+content-type: application/json
+
+{
+  "name": "Product 99",
+  "price": 99.99,
+  "quantity": 9,
+  "wid": 1,
+  "sid": 1
+}
+###
+
+
+PATCH http://localhost:3000/product/73 HTTP/1.1
+content-type: application/json
+
+{
+  "name": "Product 73",
+  "quantity": 403
+}
+###
+
+
+DELETE http://localhost:3000/product/99
