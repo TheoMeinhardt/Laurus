@@ -5,16 +5,20 @@ import { RouterView, RouterLink } from 'vue-router';
 
 import useWarehouseStore from './stores/warehouses';
 import useProductsStore from './stores/products';
+import useSupplierStore from './stores/supplier';
 
 const warehouseStore = useWarehouseStore();
 const productsStore = useProductsStore();
+const supplierStore = useSupplierStore();
 
 onMounted(async () => {
   const { data: warehouses } = await axios.get('http://localhost:3000/warehouse');
+  const { data: supplier } = await axios.get('http://localhost:3000/supplier');
   const { data: products } = await axios.get('http://localhost:3000/product');
 
   warehouseStore.warehouses = warehouses;
   productsStore.products = products;
+  supplierStore.supplier = supplier;
 });
 </script>
 

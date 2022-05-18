@@ -1,24 +1,39 @@
 <template>
   <div>
-    <table class="table table-striped mt-5">
+    <table class="table table-hover table-striped mt-5">
       <thead>
         <tr>
-          <th scope="col">Name</th>
-          <th scope="col">Quantity</th>
+          <th @click="sortProducts(sortAsc)" scope="col" class="clickable">Product</th>
+          <th scope="col">available</th>
           <th scope="col">Price</th>
+          <th scope="col">Supplier</th>
           <th scope="col">Warehouse</th>
           <th scope="col">Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <tr v-for="product of products" :key="product.pid">
+      <tbody v-if="props.wid == -1">
+        <tr v-for="product of productsStore.products" :key="product.pid">
+          <td>{{ product.name }}</td>
+          <td>{{ product.quantity }}</td>
+          <td>{{ product.price }}€</td>
+          <td>{{ supplierStore.supplier.find(({ sid }) => sid === product.sid).name }}</td>
+          <td @click="oneWarehouseOnly(warehouseStore.warehouses.find(({ wid: whid }) => whid === product.wid).wid)" class="clickable">{{ warehouseStore.warehouses.find(({ wid: whid }) => whid === product.wid).name }}</td>
+          <td>
+            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteQueryModal"><i class="fa-solid fa-trash"></i></button>
+            <deleteQuery @confirmDelete="deleteProduct(product.pid)"></deleteQuery>
+          </td>
+        </tr>
+      </tbody>
+
+      <tbody v-if="props.wid !== Number(-1)">
+        <tr v-for="product of productsStore.products.filter(({ wid }) => wid === Number(props.wid))" :key="product.pid">
           <td>{{ product.name }}</td>
           <td>{{ product.quantity }}</td>
           <td>{{ product.price }}€</td>
           <td @click="oneWarehouseOnly(warehouseStore.warehouses.find(({ wid: whid }) => whid === product.wid).wid)" class="clickable">{{ warehouseStore.warehouses.find(({ wid: whid }) => whid === product.wid).name }}</td>
           <td>
-            <button @click="deleteProduct(product.pid)" type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="fa-solid fa-trash"></i></button>
-            <deleteQuery></deleteQuery>
+            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteQueryModal"><i class="fa-solid fa-trash"></i></button>
+            <deleteQuery @confirmDelete="deleteProduct(product.pid)"></deleteQuery>
           </td>
         </tr>
       </tbody>
@@ -28,11 +43,12 @@
 
 <script setup>
 import axios from 'axios';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import useWarehouseStore from '@/stores/warehouses';
 import useProductsStore from '@/stores/products';
+import useSupplierStore from '@/stores/supplier';
 
 import deleteQuery from '@/components/deleteQuery.vue';
 
@@ -42,41 +58,40 @@ const props = defineProps({
 
 const warehouseStore = useWarehouseStore();
 const productsStore = useProductsStore();
+const supplierStore = useSupplierStore();
 const router = useRouter();
-const products = ref([]);
+let sortAsc = ref(true);
 
-loadProducts(props.wid);
-
-watch(
-  () => props.wid,
-  (cur) => {
-    loadProducts(cur);
-  }
-);
-
-function loadProducts(id) {
-  if (Number(id) === -1) {
-    products.value = productsStore.products;
-  } else {
-    products.value = productsStore.products.filter(({ wid }) => wid === Number(id));
-  }
-}
+sortProducts(true);
 
 async function updateProducts() {
   const { data: products } = await axios.get('http://localhost:3000/product');
-  productsStore.products = products;
-
-  loadProducts(props.wid);
+  productsStore.products.value = products;
 }
 
 async function deleteProduct(id) {
-  const { data } = await axios.delete(`http://localhost:3000/product/${id}`);
-
+  await axios.delete(`http://localhost:3000/product/${id}`);
   await updateProducts();
 }
 
 function oneWarehouseOnly(id) {
   router.push(`/products/${id}`);
+}
+
+function sortProducts(asc) {
+  console.log(sortAsc.value);
+  console.log(asc);
+  productsStore.products.sort((a, b) => {
+    if (a.name < b.name) {
+      return asc ? -1 : 1;
+    }
+    if (a.name > b.name) {
+      return asc ? 1 : -1;
+    }
+    return 0;
+  });
+
+  sortAsc.value = !sortAsc.value;
 }
 </script>
 
