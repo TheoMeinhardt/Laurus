@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="table-responsive">
     <table class="table table-hover table-striped mt-5">
       <thead>
         <tr>
@@ -30,6 +30,7 @@
           <td>{{ product.name }}</td>
           <td>{{ product.quantity }}</td>
           <td>{{ product.price }}€</td>
+          <td>{{ supplierStore.supplier.find(({ sid }) => sid === product.sid).name }}</td>
           <td @click="oneWarehouseOnly(warehouseStore.warehouses.find(({ wid: whid }) => whid === product.wid).wid)" class="clickable">{{ warehouseStore.warehouses.find(({ wid: whid }) => whid === product.wid).name }}</td>
           <td>
             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteQueryModal"><i class="fa-solid fa-trash"></i></button>
@@ -79,8 +80,6 @@ function oneWarehouseOnly(id) {
 }
 
 function sortProducts(asc) {
-  console.log(sortAsc.value);
-  console.log(asc);
   productsStore.products.sort((a, b) => {
     if (a.name < b.name) {
       return asc ? -1 : 1;
