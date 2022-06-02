@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody v-if="props.wid == -1">
-        <tr v-for="product of productsStore.products" :key="product.pid">
+        <tr v-for="product of products" :key="product.pid">
           <td>{{ product.name }}</td>
           <td>{{ product.quantity }}</td>
           <td>{{ product.price }}€</td>
@@ -26,7 +26,7 @@
       </tbody>
 
       <tbody v-if="props.wid !== Number(-1)">
-        <tr v-for="product of productsStore.products.filter(({ wid }) => wid === Number(props.wid))" :key="product.pid">
+        <tr v-for="product of products.filter(({ wid }) => wid === Number(props.wid))" :key="product.pid">
           <td>{{ product.name }}</td>
           <td>{{ product.quantity }}</td>
           <td>{{ product.price }}€</td>
@@ -44,7 +44,7 @@
 
 <script setup>
 import axios from 'axios';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 import useWarehouseStore from '@/stores/warehouses';
@@ -61,18 +61,24 @@ const warehouseStore = useWarehouseStore();
 const productsStore = useProductsStore();
 const supplierStore = useSupplierStore();
 const router = useRouter();
+const products = ref([]);
 let sortAsc = ref(true);
 
 sortProducts(true);
+products.value = productsStore.products;
+
+onMounted(() => {
+  products.value = productsStore.products;
+});
 
 async function updateProducts() {
-  const { data: products } = await axios.get('http://localhost:3000/product');
-  productsStore.products.value = products;
+  const { data } = await axios.get('http://localhost:3000/product');
+  products.value = data;
 }
 
 async function deleteProduct(id) {
   await axios.delete(`http://localhost:3000/product/${id}`);
-  await updateProducts();
+  updateProducts();
 }
 
 function oneWarehouseOnly(id) {
@@ -80,7 +86,7 @@ function oneWarehouseOnly(id) {
 }
 
 function sortProducts(asc) {
-  productsStore.products.sort((a, b) => {
+  products.value.sort((a, b) => {
     if (a.name < b.name) {
       return asc ? -1 : 1;
     }
